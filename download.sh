@@ -23,3 +23,6 @@ tar -xvf bert-large-uncased.tar.gz --directory coqa/bert-large-uncased/
 rm bert-large-uncased.tar.gz
 echo "finish downloading BERT file"
 
+# download spacy model
+python -m spacy download en
+echo "finish downloading spacy model"
