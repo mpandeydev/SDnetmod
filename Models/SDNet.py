@@ -137,21 +137,14 @@ class SDNet(nn.Module):
 
         self.after_deep_attn_size = self.deep_attn_output_size + self.deep_attn_input_size + addtional_feat + vocab_dim
         self.self_attn_input_size = self.after_deep_attn_size
-        self_attn_output_size = self.deep_attn_output_size
 
-        # Self attention on context
-        self.highlvl_self_att = Attention(self.self_attn_input_size, opt['deep_att_hidden_size_per_abstr'],
-                                          correlation_func=3)
-        print('Self deep-attention input is {}-dim'.format(self.self_attn_input_size))
 
         self.high_lvl_context_rnn, high_lvl_context_rnn_output_size = RNN_from_opt(
-            self.deep_attn_output_size + self_attn_output_size,
+            self.deep_attn_output_size,
             opt['highlvl_hidden_size'], num_layers=1, concat_rnn=False)
+
         context_final_size = high_lvl_context_rnn_output_size
 
-        print('Do Question self attention')
-        self.ques_self_attn = Attention(high_lvl_ques_rnn_output_size, opt['query_self_attn_hidden_size'],
-                                        correlation_func=3)
 
         ques_final_size = high_lvl_ques_rnn_output_size
         print('Before answer span finding, hidden size are', context_final_size, ques_final_size)
@@ -237,6 +230,7 @@ class SDNet(nn.Module):
 
         x_input = torch.cat(x_input_list,
                             2)  # batch x x_len x (vocab_dim + cdim + vocab_dim + pos_dim + ent_dim + feature_dim)
+
         ques_input = torch.cat(ques_input_list, 2)  # batch x q_len x (vocab_dim + cdim)
 
         # Multi-layer RNN
@@ -263,24 +257,12 @@ class SDNet(nn.Module):
         # x_rnn_after_inter_attn: batch x x_len x deep_attn_output_size
         # x_inter_attn: batch x x_len x deep_attn_input_size
 
-        # deep self attention
-        if x_cemb is None:
-            x_self_attn_input = torch.cat([x_rnn_after_inter_attn, x_inter_attn, x_word_embed], 2)
-        else:
-            x_self_attn_input = torch.cat([x_rnn_after_inter_attn, x_inter_attn, x_cemb, x_word_embed], 2)
-            # batch x x_len x (deep_attn_output_size + deep_attn_input_size + cdim + vocab_dim)
 
-        x_self_attn_output = self.highlvl_self_att(x_self_attn_input, x_self_attn_input, x_mask,
-                                                   x3=x_rnn_after_inter_attn, drop_diagonal=True)
-        # batch x x_len x deep_attn_output_size
-
-        x_highlvl_output = self.high_lvl_context_rnn(torch.cat([x_rnn_after_inter_attn, x_self_attn_output], 2), x_mask)
+        x_highlvl_output = self.high_lvl_context_rnn(x_rnn_after_inter_attn, x_mask)
         # bach x x_len x high_lvl_context_rnn.output_size
         x_final = x_highlvl_output
 
-        # question self attention  
-        ques_final = self.ques_self_attn(ques_highlvl, ques_highlvl, q_mask, x3=None,
-                                         drop_diagonal=True)  # batch x q_len x high_lvl_ques_rnn_output_size
+        ques_final = ques_highlvl
 
         # merge questions  
         q_merge_weights = self.ques_merger(ques_final, q_mask)

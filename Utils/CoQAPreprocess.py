@@ -291,7 +291,7 @@ class CoQAPreprocess():
         raw_context_offsets = []
         p = 0
         for token in words:
-            while p < len(raw_text) and re.match('\s', raw_text[p]):
+            while p < len(raw_text) and re.match(r'\s', raw_text[p]):
                 p += 1
             if raw_text[p:p + len(token)] != token:
                 print('something is wrong! token', token, 'raw_text:', raw_text)
