@@ -72,7 +72,8 @@ class SDNetTrainer(BaseTrainer):
             self.load_model(model_path)
 
         print('Loading train json...')
-        with open(os.path.join(self.opt['FEATURE_FOLDER'], self.data_prefix + 'train-preprocessed.json'), 'r') as f:
+        # with open(os.path.join(self.opt['FEATURE_FOLDER'], self.data_prefix + 'train-preprocessed.json'), 'r') as f:
+        with open(os.path.join(self.opt['FEATURE_FOLDER'], self.data_prefix + 'dev-preprocessed.json'), 'r') as f:
             train_data = json.load(f)
 
         print('Loading dev json...')
@@ -179,6 +180,7 @@ class SDNetTrainer(BaseTrainer):
         scores = torch.cat((expand_score, score_no, score_yes, score_no_answer),
                            dim=1)  # batch x (context_len * context_len + 3)
         targets = []
+        # print("target length:{}".format(len(targets)))
         span_idx = int(context_len * context_len)
         for i in range(ground_truth.shape[0]):
             if ground_truth[i][0] == -1 and ground_truth[i][1] == -1:  # no answer
@@ -188,13 +190,15 @@ class SDNetTrainer(BaseTrainer):
             if ground_truth[i][0] == -1 and ground_truth[i][1] == 0:  # yes
                 targets.append(span_idx + 1)
             if ground_truth[i][0] != -1 and ground_truth[i][1] != -1:  # normal span
-                targets.append(ground_truth[i][0] * context_len + ground_truth[i][1])
+                targets.append((ground_truth[i][0] * context_len + ground_truth[i][1]).item())
 
         targets = torch.LongTensor(np.array(targets))
         if self.use_cuda:
             targets = targets.cuda()
+
         loss = self.loss_func(scores, targets)
-        self.train_loss.update(loss.data[0], 1)
+
+        self.train_loss.update(loss.item(), 1)
         self.optimizer.zero_grad()
         loss.backward()
         torch.nn.utils.clip_grad_norm(self.network.parameters(), self.opt['grad_clipping'])

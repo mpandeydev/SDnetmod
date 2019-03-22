@@ -22,6 +22,7 @@ from Models.Bert.tokenization import BertTokenizer
 from Utils.GeneralUtils import normalize_text, nlp
 from Utils.Constants import *
 from torch.autograd import Variable
+from tqdm import tqdm
 
 POS = {w: i for i, w in enumerate([''] + list(nlp.tagger.labels))}
 ENT = {w: i for i, w in enumerate([''] + nlp.entity.move_names)}
@@ -188,7 +189,7 @@ class BatchGen:
     def __iter__(self):
         data = self.data
         MAX_ANS_SPAN = 15
-        for datum in data:
+        for datum in tqdm(data):
             if not self.evaluation:
                 # remove super long answers for training
                 datum['qas'] = [qa for qa in datum['qas'] if
