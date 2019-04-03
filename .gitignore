@@ -8,7 +8,8 @@
 *.user
 *.userosscache
 *.sln.docstates
-
+Scratch/train-v2.0.json
+Scratch/squad_in_coqa_format.json
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 
