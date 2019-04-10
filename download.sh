@@ -3,6 +3,7 @@ mkdir coqa/data
 mkdir coqa/bert-large-uncased
 mkdir glove
 
+sudo apt-get install unzip
 
 cp bert_vocab_files/bert-large-uncased-vocab.txt coqa/bert-large-uncased
 cp conf coqa/conf
