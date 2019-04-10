@@ -23,6 +23,8 @@ tar -xvf bert-large-uncased.tar.gz --directory coqa/bert-large-uncased/
 rm bert-large-uncased.tar.gz
 echo "finish downloading BERT file"
 
+pip install spacy
+pip install msgpack
 # download spacy model
 python -m spacy download en
 echo "finish downloading spacy model"
